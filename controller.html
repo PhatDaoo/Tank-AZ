@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>AZ Tank 4P | Phone Controller</title>
+    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: #16181c;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            touch-action: none;
+            overflow: hidden;
+        }
+
+        /* --- SCREEN 1: SLOT SELECTION --- */
+        #setup {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: radial-gradient(circle at center, #262a31 0%, #141619 100%);
+        }
+        .setup-title {
+            margin: 0 0 8px 0;
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0 #000;
+        }
+        #connection-status {
+            margin-bottom: 20px;
+            color: #ffeb3b;
+            font-weight: 800;
+            font-size: 14px;
+            text-align: center;
+        }
+        .player-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            width: 100%;
+            max-width: 440px;
+            opacity: 0.45;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .player-btn {
+            padding: 22px 16px;
+            font-size: 20px;
+            font-weight: 900;
+            border-radius: 12px;
+            background-color: #2f3540;
+            color: white;
+            border: 3px solid #111;
+            box-shadow: 0 5px 0 #0d0e11;
+            cursor: pointer;
+            transition: transform 0.12s;
+            text-transform: uppercase;
+        }
+        .player-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #0d0e11;
+        }
+        .player-btn .slot-sub {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        .player-btn.taken {
+            background-color: #3a3d42 !important;
+            border-color: #222 !important;
+            color: #777 !important;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* --- SCREEN 2: GAMEPAD --- */
+        #gamepad {
+            display: none;
+            flex: 1;
+            position: relative;
+            background: radial-gradient(circle at center, #22262c 0%, #121417 100%);
+        }
+
+        #top-bar {
+            position: absolute;
+            top: 12px;
+            left: 14px;
+            right: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 200;
+        }
+        .top-left-btns {
+            display: flex;
+            gap: 8px;
+        }
+        .ctrl-top-btn {
+            background: #2f343d;
+            color: #fff;
+            border: 2px solid #111;
+            padding: 8px 13px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #0d0e11;
+        }
+        #mode-btn {
+            background: #1b5e20;
+            border-color: #4caf50;
+        }
+        #leave-btn {
+            background: #c62828;
+        }
+
+        #player-header {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 14px;
+            pointer-events: none;
+            z-index: 150;
+        }
+        #player-label {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-shadow: 2px 2px 0 #000;
+        }
+        #steer-hint {
+            font-size: 11px;
+            color: #9aa0a6;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        /* --- EDIT PANEL --- */
+        #edit-panel {
+            display: none;
+            position: absolute;
+            top: 58px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 17, 20, 0.94);
+            padding: 14px 22px;
+            border-radius: 10px;
+            z-index: 300;
+            color: white;
+            text-align: center;
+            border: 2px solid #29b6f6;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            min-width: 260px;
+        }
+        #edit-panel h4 {
+            margin: 0 0 6px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #29b6f6;
+        }
+        #edit-panel input[type=range] {
+            width: 180px;
+            margin: 8px 0;
+            accent-color: #29b6f6;
+        }
+        .edit-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 6px;
+        }
+        .edit-actions button {
+            background: #29b6f6;
+            color: #111;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-weight: 900;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .edit-actions button.secondary {
+            background: #555;
+            color: #fff;
+        }
+
+        /* --- DRAGGABLE CONTROL GROUPS --- */
+        .draggable-group {
+            position: absolute;
+            transform-origin: center center;
+            touch-action: none;
+        }
+
+        #dpad-group {
+            left: 8%;
+            top: 38%;
+            width: 175px;
+            height: 175px;
+        }
+        #btn-shoot-group {
+            left: 72%;
+            top: 42%;
+            width: 130px;
+            height: 130px;
+        }
+        #btn-rev-group {
+            left: 54%;
+            top: 64%;
+            width: 78px;
+            height: 78px;
+        }
+
+        body.edit-mode .draggable-group {
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 50%;
+        }
+        body.edit-mode .draggable-group.selected {
+            border: 3px solid #29b6f6;
+            background: rgba(41, 182, 246, 0.22);
+        }
+        body.edit-mode .btn,
+        body.edit-mode #joystick-base {
+            pointer-events: none;
+        }
+
+        /* --- VIRTUAL ANALOG JOYSTICK --- */
+        .joystick-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        #joystick-base {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%);
+            border: 3px solid rgba(255, 255, 255, 0.28);
+            border-radius: 50%;
+        }
+        #joystick-base::after {
+            content: '';
+            position: absolute;
+            left: 37.5%;
+            top: 37.5%;
+            width: 25%;
+            height: 25%;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        #joystick-stick {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 68px;
+            height: 68px;
+            margin-left: -34px;
+            margin-top: -34px;
+            background: radial-gradient(circle at 35% 35%, #ffffff, #9aa0a6);
+            border: 3px solid #111;
+            border-radius: 50%;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6);
+            pointer-events: none;
+            transition: left 0.08s, top 0.08s;
+        }
+
+        /* --- ACTION BUTTONS --- */
+        .btn {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: 900;
+            text-transform: uppercase;
+            border: 4px solid #111;
+            box-shadow: 0 6px 0 #0b0c0e;
+        }
+        #btn-shoot {
+            background: radial-gradient(circle at 35% 35%, #ef5350, #b71c1c);
+            border-color: #ffcdd2;
+            font-size: 24px;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0 #000;
+        }
+        #btn-rev {
+            background: radial-gradient(circle at 35% 35%, #546e7a, #263238);
+            border-color: #90a4ae;
+            font-size: 14px;
+            text-shadow: 1px 1px 0 #000;
+        }
+        .btn.pressed {
+            transform: scale(0.93);
+            filter: brightness(1.2);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SCREEN 1: SLOT PICKER -->
+    <div id="setup">
+        <h2 class="setup-title">🎮 AZ TANK CONTROLLER</h2>
+        <div id="connection-status">Connecting to P2P Host...</div>
+        <div class="player-btns" id="player-btns">
+            <button class="player-btn" id="pbtn-1" data-slot="1" style="background:#1e88e5">
+                PLAYER 1<span class="slot-sub" id="psub-1">Tap to join</span>
+            </button>
+            <button class="player-btn" id="pbtn-2" data-slot="2" style="background:#e53935">
+                PLAYER 2<span class="slot-sub" id="psub-2">Tap to join</span>
+            </button>
+            <button class="player-btn" id="pbtn-3" data-slot="3" style="background:#43a047">
+                PLAYER 3<span class="slot-sub" id="psub-3">Tap to join</span>
+            </button>
+            <button class="player-btn" id="pbtn-4" data-slot="4" style="background:#fdd835;color:#111">
+                PLAYER 4<span class="slot-sub" id="psub-4">Tap to join</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: IN-GAME CONTROLLER -->
+    <div id="gamepad">
+        <div id="top-bar">
+            <div class="top-left-btns">
+                <button id="settings-btn" class="ctrl-top-btn" type="button">⚙️ Layout</button>
+                <button id="mode-btn" class="ctrl-top-btn" type="button">🕹️ Mode: DIRECT</button>
+            </div>
+            <button id="leave-btn" class="ctrl-top-btn" type="button">Leave</button>
+        </div>
+
+        <div id="player-header">
+            <div id="player-label">PLAYER 1</div>
+            <div id="steer-hint">Direct 360° Steer + Fire</div>
+        </div>
+
+        <div id="edit-panel">
+            <h4>Drag Controls & Resize</h4>
+            <input type="range" id="size-slider" min="0.6" max="2.2" step="0.05" value="1" /><br />
+            <div class="edit-actions">
+                <button id="reset-layout-btn" class="secondary" type="button">Reset</button>
+                <button id="save-layout-btn" type="button">Save & Done</button>
+            </div>
+        </div>
+
+        <div class="draggable-group" id="dpad-group" data-scale="1">
+            <div class="joystick-container" id="joystick-container">
+                <div id="joystick-base"></div>
+                <div id="joystick-stick"></div>
+            </div>
+        </div>
+
+        <div class="draggable-group" id="btn-shoot-group" data-scale="1">
+            <div class="btn action-btn" id="btn-shoot" data-action="shoot">FIRE</div>
+        </div>
+
+        <div class="draggable-group" id="btn-rev-group" data-scale="1">
+            <div class="btn action-btn" id="btn-rev" data-action="down">REV</div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const hostId = urlParams.get('host');
+
+        let playerNum = null;
+        let conn = null;
+        let steerMode = localStorage.getItem('azTankSteerMode') || 'direct'; // 'direct' | 'classic'
+        let wakeLock = null;
+
+        const statusEl = document.getElementById('connection-status');
+        const btnsEl = document.getElementById('player-btns');
+        const modeBtn = document.getElementById('mode-btn');
+        const steerHintEl = document.getElementById('steer-hint');
+
+        function updateSteerModeUI() {
+            if (steerMode === 'direct') {
+                modeBtn.innerText = '🕹️ Mode: DIRECT';
+                modeBtn.style.background = '#1b5e20';
+                modeBtn.style.borderColor = '#4caf50';
+                steerHintEl.innerText = 'Pull joystick in any 360° direction to steer & drive';
+            } else {
+                modeBtn.innerText = '🕹️ Mode: CLASSIC';
+                modeBtn.style.background = '#0d47a1';
+                modeBtn.style.borderColor = '#42a5f5';
+                steerHintEl.innerText = 'Up/Down = Drive | Left/Right = Rotate Tank';
+            }
+        }
+        updateSteerModeUI();
+
+        modeBtn.addEventListener('click', () => {
+            releaseAllJoystickInputs();
+            steerMode = steerMode === 'direct' ? 'classic' : 'direct';
+            localStorage.setItem('azTankSteerMode', steerMode);
+            updateSteerModeUI();
+        });
+
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                } catch (_) {}
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && playerNum) {
+                requestWakeLock();
+            } else {
+                releaseAllInputs();
+            }
+        });
+
+        function vibrate(pattern) {
+            if (navigator.vibrate) {
+                try {
+                    navigator.vibrate(pattern);
+                } catch (_) {}
+            }
+        }
+
+        // --- WEBRTC CONNECTION ---
+        if (!hostId) {
+            statusEl.innerText = '❌ Missing Host ID! Scan the QR code on the PC screen.';
+            statusEl.style.color = '#ef5350';
+        } else {
+            const peer = new Peer();
+
+            peer.on('open', () => {
+                statusEl.innerText = 'Connecting to Game Screen...';
+                conn = peer.connect(hostId, { reliable: true });
+
+                conn.on('open', () => {
+                    statusEl.innerText = '✅ Connected! Select your Tank Slot:';
+                    statusEl.style.color = '#76d63e';
+                    btnsEl.style.opacity = '1';
+                    btnsEl.style.pointerEvents = 'auto';
+
+                    // Auto-reclaim previous slot if player refreshed page
+                    const savedSlot = sessionStorage.getItem('azTankSlot_' + hostId);
+                    if (savedSlot && !playerNum) {
+                        selectPlayer(Number(savedSlot));
+                    }
+                });
+
+                conn.on('data', (data) => {
+                    if (!data || typeof data !== 'object') return;
+
+                    if (data.type === 'playersUpdate') {
+                        const taken = data.taken || [];
+                        const metaList = data.meta || [];
+
+                        for (let i = 1; i <= 4; i++) {
+                            const btn = document.getElementById(`pbtn-${i}`);
+                            const sub = document.getElementById(`psub-${i}`);
+                            const meta = metaList.find((m) => m.slot === i);
+
+                            if (meta) {
+                                btn.style.background = meta.color;
+                                btn.childNodes[0].nodeValue = `${meta.name.toUpperCase()} `;
+                            }
+
+                            if (taken.includes(i) && playerNum !== i) {
+                                btn.classList.add('taken');
+                                btn.disabled = true;
+                                if (sub) sub.innerText = '(TAKEN)';
+                            } else {
+                                btn.classList.remove('taken');
+                                btn.disabled = false;
+                                if (sub) sub.innerText = playerNum === i ? '(YOUR SLOT)' : 'Tap to join';
+                            }
+
+                            // Update active gamepad header if our own color/name changed on Host
+                            if (playerNum === i && meta) {
+                                const lbl = document.getElementById('player-label');
+                                lbl.innerText = `P${i} — ${meta.name.toUpperCase()}`;
+                                lbl.style.color = meta.color;
+                            }
+                        }
+                    } else if (data.type === 'requestPlayerResponse') {
+                        if (data.success) {
+                            playerNum = data.num;
+                            sessionStorage.setItem('azTankSlot_' + hostId, String(playerNum));
+
+                            document.getElementById('setup').style.display = 'none';
+                            document.getElementById('gamepad').style.display = 'block';
+
+                            const lbl = document.getElementById('player-label');
+                            lbl.innerText = `P${playerNum} — ${(data.name || 'PLAYER ' + playerNum).toUpperCase()}`;
+                            lbl.style.color = data.color || '#76d63e';
+
+                            vibrate(30);
+                            requestWakeLock();
+                            if (document.documentElement.requestFullscreen) {
+                                document.documentElement.requestFullscreen().catch(() => {});
+                            }
+                            loadLayout();
+                        } else {
+                            sessionStorage.removeItem('azTankSlot_' + hostId);
+                            alert(data.message || 'Slot unavailable');
+                        }
+                    } else if (data.type === 'haptic') {
+                        vibrate(data.pattern || 60);
+                    } else if (data.type === 'weaponUpdate') {
+                        const shootBtn = document.getElementById('btn-shoot');
+                        if (!shootBtn) return;
+                        if (data.weapon) {
+                            shootBtn.innerHTML = `<span style="font-size:17px">${data.weapon.short}</span><span style="font-size:12px;margin-top:2px">[${data.weapon.ammo}]</span>`;
+                            shootBtn.style.background = `radial-gradient(circle at 35% 35%, ${data.weapon.color}, #1b1b1b)`;
+                            shootBtn.style.borderColor = '#ffffff';
+                            vibrate([20, 30, 20]);
+                        } else {
+                            shootBtn.innerHTML = 'FIRE';
+                            shootBtn.style.background = 'radial-gradient(circle at 35% 35%, #ef5350, #b71c1c)';
+                            shootBtn.style.borderColor = '#ffcdd2';
+                        }
+                    }
+                });
+
+                conn.on('close', () => {
+                    alert('Disconnected from Game Host!');
+                    location.reload();
+                });
+
+                peer.on('error', (err) => {
+                    statusEl.innerText = '❌ P2P Error: ' + (err.type || 'connection failed');
+                    statusEl.style.color = '#ef5350';
+                });
+            });
+        }
+
+        function selectPlayer(num) {
+            if (conn && conn.open) {
+                conn.send({ type: 'requestPlayer', num });
+            }
+        }
+
+        document.querySelectorAll('.player-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                selectPlayer(Number(btn.dataset.slot));
+            });
+        });
+
+        document.getElementById('leave-btn').addEventListener('click', () => {
+            releaseAllInputs();
+            if (conn && conn.open) {
+                conn.send({ type: 'leaveSlot' });
+            }
+            sessionStorage.removeItem('azTankSlot_' + hostId);
+            playerNum = null;
+            document.getElementById('gamepad').style.display = 'none';
+            document.getElementById('setup').style.display = 'flex';
+        });
+
+        function sendAction(action, state) {
+            if (playerNum && !isEditMode && conn && conn.open) {
+                conn.send({ type: 'action', player: playerNum, action, state });
+            }
+        }
+
+        function sendJoystickVector(vx, vy) {
+            if (playerNum && !isEditMode && conn && conn.open) {
+                conn.send({
+                    type: 'joystickVector',
+                    player: playerNum,
+                    mode: 'direct',
+                    vx: Number(vx.toFixed(3)),
+                    vy: Number(vy.toFixed(3))
+                });
+            }
+        }
+
+        // --- ACTION BUTTONS (FIRE & REVERSE) WITH MULTI-TOUCH & CANCEL SAFETY ---
+        const actionButtons = document.querySelectorAll('.action-btn');
+        actionButtons.forEach((btn) => {
+            const action = btn.dataset.action;
+            let activeTouchId = null;
+
+            const press = () => {
+                if (isEditMode) return;
+                btn.classList.add('pressed');
+                if (action === 'shoot') vibrate(14);
+                sendAction(action, 'pressed');
+            };
+
+            const release = () => {
+                activeTouchId = null;
+                btn.classList.remove('pressed');
+                sendAction(action, 'released');
+            };
+
+            btn.addEventListener('touchstart', (e) => {
+                if (isEditMode) return;
+                e.preventDefault();
+                if (activeTouchId === null && e.changedTouches.length > 0) {
+                    activeTouchId = e.changedTouches[0].identifier;
+                    press();
+                }
+            }, { passive: false });
+
+            const onTouchEndOrCancel = (e) => {
+                if (activeTouchId === null) return;
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === activeTouchId) {
+                        e.preventDefault();
+                        release();
+                        break;
+                    }
+                }
+            };
+
+            btn.addEventListener('touchend', onTouchEndOrCancel, { passive: false });
+            btn.addEventListener('touchcancel', onTouchEndOrCancel, { passive: false });
+
+            btn.addEventListener('mousedown', (e) => {
+                if (isEditMode) return;
+                e.preventDefault();
+                press();
+            });
+            window.addEventListener('mouseup', () => {
+                if (btn.classList.contains('pressed')) release();
+            });
+        });
+
+        // --- 360° VIRTUAL ANALOG JOYSTICK ---
+        const joystickBase = document.getElementById('joystick-base');
+        const joystickStick = document.getElementById('joystick-stick');
+        let joyActive = false;
+        let joyIdentifier = null;
+        let currentJoyX = 'none';
+        let currentJoyY = 'none';
+        let lastSentVx = 0;
+        let lastSentVy = 0;
+        let lastVectorSendTime = 0;
+
+        function handleJoyStart(e) {
+            if (isEditMode) return;
+            e.preventDefault();
+            joyActive = true;
+            joystickStick.style.transition = 'none';
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                joyIdentifier = e.changedTouches[0].identifier;
+                updateJoyPosition(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+            } else {
+                updateJoyPosition(e.clientX, e.clientY);
+            }
+        }
+
+        function handleJoyMove(e) {
+            if (!joyActive || isEditMode) return;
+            e.preventDefault();
+            let clientX, clientY;
+            if (e.changedTouches) {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === joyIdentifier) {
+                        clientX = e.changedTouches[i].clientX;
+                        clientY = e.changedTouches[i].clientY;
+                        break;
+                    }
+                }
+                // Fixed bug from old repo: check undefined instead of falsy !clientX
+                if (clientX === undefined) return;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            updateJoyPosition(clientX, clientY);
+        }
+
+        function releaseAllJoystickInputs() {
+            joyActive = false;
+            joyIdentifier = null;
+            joystickStick.style.transition = 'left 0.08s, top 0.08s';
+            joystickStick.style.left = '50%';
+            joystickStick.style.top = '50%';
+
+            if (currentJoyX !== 'none') {
+                sendAction(currentJoyX, 'released');
+                currentJoyX = 'none';
+            }
+            if (currentJoyY !== 'none') {
+                sendAction(currentJoyY, 'released');
+                currentJoyY = 'none';
+            }
+            if (lastSentVx !== 0 || lastSentVy !== 0) {
+                lastSentVx = 0;
+                lastSentVy = 0;
+                sendJoystickVector(0, 0);
+            }
+        }
+
+        function releaseAllInputs() {
+            releaseAllJoystickInputs();
+            sendAction('shoot', 'released');
+            sendAction('down', 'released');
+        }
+
+        function handleJoyEnd(e) {
+            if (!joyActive || isEditMode) return;
+            if (e.changedTouches) {
+                let matched = false;
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === joyIdentifier) {
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) return;
+            }
+            e.preventDefault();
+            releaseAllJoystickInputs();
+        }
+
+        function updateJoyPosition(clientX, clientY) {
+            const rect = joystickBase.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            let dx = clientX - centerX;
+            let dy = clientY - centerY;
+            const distance = Math.hypot(dx, dy);
+            const maxRadius = rect.width / 2;
+
+            if (distance > maxRadius && distance > 0) {
+                dx = (dx / distance) * maxRadius;
+                dy = (dy / distance) * maxRadius;
+            }
+
+            joystickStick.style.left = `calc(50% + ${dx}px)`;
+            joystickStick.style.top = `calc(50% + ${dy}px)`;
+
+            const normX = maxRadius > 0 ? dx / maxRadius : 0;
+            const normY = maxRadius > 0 ? dy / maxRadius : 0;
+
+            if (steerMode === 'direct') {
+                const now = performance.now();
+                const deltaVec = Math.hypot(normX - lastSentVx, normY - lastSentVy);
+                if (deltaVec > 0.04 || now - lastVectorSendTime > 40) {
+                    lastSentVx = normX;
+                    lastSentVy = normY;
+                    lastVectorSendTime = now;
+                    sendJoystickVector(normX, normY);
+                }
+            } else {
+                // Classic 4-way tank controls (Up/Down = forward/back, Left/Right = turn)
+                const threshold = maxRadius * 0.25;
+                let newJoyX = 'none';
+                if (dx < -threshold) newJoyX = 'left';
+                else if (dx > threshold) newJoyX = 'right';
+
+                let newJoyY = 'none';
+                if (dy < -threshold) newJoyY = 'up';
+                else if (dy > threshold) newJoyY = 'down';
+
+                if (newJoyX !== currentJoyX) {
+                    if (currentJoyX !== 'none') sendAction(currentJoyX, 'released');
+                    if (newJoyX !== 'none') sendAction(newJoyX, 'pressed');
+                    currentJoyX = newJoyX;
+                }
+                if (newJoyY !== currentJoyY) {
+                    if (currentJoyY !== 'none') sendAction(currentJoyY, 'released');
+                    if (newJoyY !== 'none') sendAction(newJoyY, 'pressed');
+                    currentJoyY = newJoyY;
+                }
+            }
+        }
+
+        joystickBase.addEventListener('touchstart', handleJoyStart, { passive: false });
+        document.addEventListener('touchmove', handleJoyMove, { passive: false });
+        document.addEventListener('touchend', handleJoyEnd, { passive: false });
+        document.addEventListener('touchcancel', handleJoyEnd, { passive: false });
+
+        joystickBase.addEventListener('mousedown', handleJoyStart);
+        document.addEventListener('mousemove', handleJoyMove);
+        document.addEventListener('mouseup', handleJoyEnd);
+        window.addEventListener('blur', releaseAllInputs);
+
+        // --- LAYOUT CUSTOMIZATION (EDIT MODE) ---
+        let isEditMode = false;
+        let selectedGroup = null;
+        let isDragging = false;
+        let startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
+
+        const slider = document.getElementById('size-slider');
+        const groups = document.querySelectorAll('.draggable-group');
+        const settingsBtn = document.getElementById('settings-btn');
+        const editPanel = document.getElementById('edit-panel');
+
+        function toggleEditMode() {
+            releaseAllInputs();
+            isEditMode = !isEditMode;
+            if (isEditMode) {
+                document.body.classList.add('edit-mode');
+                editPanel.style.display = 'block';
+                settingsBtn.innerText = '✖ Done';
+                settingsBtn.style.background = '#29b6f6';
+                settingsBtn.style.color = '#111';
+                selectGroup(document.getElementById('dpad-group'));
+            } else {
+                document.body.classList.remove('edit-mode');
+                editPanel.style.display = 'none';
+                settingsBtn.innerText = '⚙️ Layout';
+                settingsBtn.style.background = '#2f343d';
+                settingsBtn.style.color = '#fff';
+                if (selectedGroup) {
+                    selectedGroup.classList.remove('selected');
+                    selectedGroup = null;
+                }
+                saveLayout();
+            }
+        }
+
+        settingsBtn.addEventListener('click', toggleEditMode);
+        document.getElementById('save-layout-btn').addEventListener('click', toggleEditMode);
+        document.getElementById('reset-layout-btn').addEventListener('click', () => {
+            localStorage.removeItem('azTankLayout');
+            const defaults = {
+                'dpad-group': { left: '8%', top: '38%', scale: '1' },
+                'btn-shoot-group': { left: '72%', top: '42%', scale: '1' },
+                'btn-rev-group': { left: '54%', top: '64%', scale: '1' }
+            };
+            groups.forEach((g) => {
+                const d = defaults[g.id];
+                if (d) {
+                    g.style.left = d.left;
+                    g.style.top = d.top;
+                    g.dataset.scale = d.scale;
+                    g.style.transform = `scale(${d.scale})`;
+                }
+            });
+            if (selectedGroup) slider.value = 1;
+        });
+
+        function selectGroup(group) {
+            if (selectedGroup) selectedGroup.classList.remove('selected');
+            selectedGroup = group;
+            selectedGroup.classList.add('selected');
+            slider.value = parseFloat(group.dataset.scale || 1);
+        }
+
+        slider.addEventListener('input', (e) => {
+            if (selectedGroup) {
+                const scale = e.target.value;
+                selectedGroup.dataset.scale = scale;
+                selectedGroup.style.transform = `scale(${scale})`;
+            }
+        });
+
+        function dragStart(e) {
+            if (!isEditMode) return;
+            e.preventDefault();
+            selectGroup(this);
+            isDragging = true;
+            const pt = e.touches ? e.touches[0] : e;
+            startX = pt.clientX;
+            startY = pt.clientY;
+            initialLeft = selectedGroup.offsetLeft;
+            initialTop = selectedGroup.offsetTop;
+        }
+
+        function dragMove(e) {
+            if (!isDragging || !isEditMode || !selectedGroup) return;
+            e.preventDefault();
+            const pt = e.touches ? e.touches[0] : e;
+            const newLeft = initialLeft + (pt.clientX - startX);
+            const newTop = initialTop + (pt.clientY - startY);
+            selectedGroup.style.left = ((newLeft / window.innerWidth) * 100).toFixed(1) + '%';
+            selectedGroup.style.top = ((newTop / window.innerHeight) * 100).toFixed(1) + '%';
+        }
+
+        groups.forEach((group) => {
+            group.addEventListener('touchstart', dragStart, { passive: false });
+            group.addEventListener('mousedown', dragStart);
+        });
+        document.addEventListener('touchmove', dragMove, { passive: false });
+        document.addEventListener('mousemove', dragMove);
+        document.addEventListener('touchend', () => { isDragging = false; });
+        document.addEventListener('mouseup', () => { isDragging = false; });
+
+        function saveLayout() {
+            const layout = {};
+            groups.forEach((g) => {
+                layout[g.id] = {
+                    left: g.style.left,
+                    top: g.style.top,
+                    scale: g.dataset.scale
+                };
+            });
+            localStorage.setItem('azTankLayout', JSON.stringify(layout));
+        }
+
+        function loadLayout() {
+            const saved = localStorage.getItem('azTankLayout');
+            if (!saved) return;
+            try {
+                const layout = JSON.parse(saved);
+                groups.forEach((g) => {
+                    if (layout[g.id]) {
+                        if (layout[g.id].left) g.style.left = layout[g.id].left;
+                        if (layout[g.id].top) g.style.top = layout[g.id].top;
+                        if (layout[g.id].scale) {
+                            g.dataset.scale = layout[g.id].scale;
+                            g.style.transform = `scale(${layout[g.id].scale})`;
+                        }
+                    }
+                });
+            } catch (_) {}
+        }
+    </script>
+</body>
+</html>

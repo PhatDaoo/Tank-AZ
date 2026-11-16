@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AZ Tank 4P | Multiplayer Arena</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+    <!-- FLOATING TOP-LEFT LOBBY (PeerJS + QR Code like Gun Mayhem) -->
+    <div id="lobby">
+        <div id="lobby-header">
+            <span id="lobby-title">🎮 Phone Controllers</span>
+            <button id="toggle-lobby-btn" type="button">➖ Minimize</button>
+        </div>
+        <div id="lobby-minimized">
+            <span id="mini-lobby-status">⏳ No phone controller</span>
+        </div>
+        <div id="lobby-expanded">
+            <div class="lobby-body-row">
+                <div class="lobby-slots-col">
+                    <div id="lobby-slot-1" class="lobby-slot-row"><div class="lobby-dot"></div> Player 1 (Arrows + M)</div>
+                    <div id="lobby-slot-2" class="lobby-slot-row"><div class="lobby-dot"></div> Player 2 (WASD + Q/Space)</div>
+                    <div id="lobby-slot-3" class="lobby-slot-row"><div class="lobby-dot"></div> Player 3 (IJKL + P/U)</div>
+                    <div id="lobby-slot-4" class="lobby-slot-row"><div class="lobby-dot"></div> Player 4 (Numpad 8546 + 0)</div>
+                    <div id="lobby-note">⏳ Starting WebRTC Host...</div>
+                </div>
+                <div id="qr-container" style="display: none;">
+                    <div id="qr-text">SCAN TO PLAY</div>
+                    <div id="qrcode"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 1: PLAYER SETUP (Gun Mayhem 4-Slot Layout) -->
+    <section id="setup-screen" class="screen active">
+        <div class="setup-container">
+            <div class="setup-banner-wrap">
+                <h1 class="setup-banner-title">Player Setup</h1>
+                <div class="setup-match-options">
+                    <label class="match-opt-label">
+                        Win Score:
+                        <select id="target-score-select" class="match-opt-select">
+                            <option value="5">5 Points</option>
+                            <option value="10" selected>10 Points</option>
+                            <option value="15">15 Points</option>
+                            <option value="999">Endless</option>
+                        </select>
+                    </label>
+                    <label class="match-opt-label">
+                        Map Size:
+                        <select id="maze-size-select" class="match-opt-select">
+                            <option value="small">Small (Brawl)</option>
+                            <option value="medium" selected>Medium (Classic)</option>
+                            <option value="large">Large (4 Players)</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 4 PLAYER SLOTS -->
+            <div id="slots-grid" class="slots-grid"></div>
+
+            <!-- BOTTOM FOOTER -->
+            <div class="setup-footer">
+                <button id="reset-slots-btn" class="footer-btn btn-back" type="button">
+                    <span>RESET</span>
+                </button>
+                <div id="setup-warning"></div>
+                <button id="start-match-btn" class="footer-btn btn-start" type="button">
+                    <span>START!</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SCREEN 2: GAME ARENA -->
+    <section id="game-screen" class="screen">
+        <header id="game-top-bar">
+            <div id="round-status-text">ROUND 1</div>
+            <div class="top-bar-actions">
+                <button id="btn-skip-map" class="hud-btn" type="button">🔄 New Map (R)</button>
+                <button id="btn-mute" class="hud-btn" type="button">🔊 Sound: ON</button>
+                <button id="btn-back-setup" class="hud-btn danger" type="button">⬅ Player Setup (ESC)</button>
+            </div>
+        </header>
+
+        <div id="arena-wrapper">
+            <div id="round-banner"></div>
+            <canvas id="game-canvas" width="960" height="600"></canvas>
+
+            <!-- MATCH VICTORY OVERLAY -->
+            <div id="victory-modal">
+                <div class="victory-box">
+                    <h2 id="victory-title" class="victory-title">PLAYER 1 WINS!</h2>
+                    <div id="victory-sub" class="victory-sub">Reached 10 points to win the match!</div>
+                    <div class="victory-actions">
+                        <button id="btn-rematch" class="hud-btn" type="button" style="background:#4caf50;padding:10px 20px;font-size:16px;">▶ Play Again</button>
+                        <button id="btn-victory-setup" class="hud-btn" type="button" style="padding:10px 20px;font-size:16px;">⚙ Player Setup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer id="scoreboard"></footer>
+    </section>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

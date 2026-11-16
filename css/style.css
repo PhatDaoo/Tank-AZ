@@ -1,0 +1,679 @@
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #181a1d;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #fff;
+}
+
+/* --- FLOATING LOBBY OVERLAY (Top-left like Gun Mayhem) --- */
+#lobby {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: rgba(15, 17, 20, 0.92);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: white;
+    z-index: 500;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    transition: all 0.2s ease;
+}
+
+#lobby-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 6px;
+}
+
+#lobby-title {
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #76d63e;
+    letter-spacing: 0.5px;
+}
+
+#toggle-lobby-btn {
+    background: #2f333a;
+    color: #eee;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+#toggle-lobby-btn:hover {
+    background: #444952;
+}
+
+#lobby-minimized {
+    display: none;
+    font-size: 12px;
+    font-weight: bold;
+    color: #ccc;
+}
+
+#lobby.minimized #lobby-expanded {
+    display: none;
+}
+#lobby.minimized #lobby-minimized {
+    display: block;
+}
+#lobby.minimized #lobby-header {
+    margin-bottom: 4px;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+#lobby.minimized #lobby-title {
+    display: none;
+}
+
+.lobby-body-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.lobby-slots-col {
+    display: flex;
+    flex-direction: column;
+}
+#qr-container {
+    background: #ffffff;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+#qr-text {
+    color: #111;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+}
+.lobby-slot-row {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    margin-bottom: 5px;
+    color: #999;
+    font-weight: 600;
+}
+.lobby-slot-row.connected {
+    color: #fff;
+}
+.lobby-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #555;
+    margin-right: 8px;
+}
+.lobby-slot-row.connected .lobby-dot {
+    background: #4caf50;
+    box-shadow: 0 0 6px #4caf50;
+}
+#lobby-note {
+    font-size: 11px;
+    color: #8b949e;
+    margin-top: 6px;
+    border-top: 1px dashed #333;
+    padding-top: 6px;
+}
+
+/* --- SCREENS --- */
+.screen {
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.screen.active {
+    display: flex;
+}
+
+/* --- PLAYER SETUP SCREEN (Gun Mayhem Inspired) --- */
+#setup-screen {
+    background: radial-gradient(circle at center, #34383e 0%, #202327 100%);
+    padding: 20px;
+}
+
+.setup-container {
+    width: 100%;
+    max-width: 1080px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.setup-banner-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #5e6368;
+    border: 4px solid #111;
+    padding: 10px 24px;
+    transform: skewX(-4deg);
+    box-shadow: 6px 6px 0px #111;
+}
+
+.setup-banner-title {
+    font-size: 38px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 3px 3px 0 #111;
+    letter-spacing: 1px;
+    margin: 0;
+    transform: skewX(4deg);
+}
+
+.setup-match-options {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    transform: skewX(4deg);
+}
+
+.match-opt-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: #ddd;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.match-opt-select {
+    background: #222;
+    color: #fff;
+    border: 2px solid #111;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* 4 PLAYER CARDS GRID */
+.slots-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    height: 450px;
+}
+
+.slot-card {
+    background: #ffffff;
+    color: #111;
+    border: 4px solid #111;
+    box-shadow: 7px 7px 0px #111;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    position: relative;
+    transition: transform 0.15s ease;
+}
+
+/* Empty State inside Slot Card */
+.slot-empty-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.slot-empty-title {
+    color: #c62828;
+    font-weight: 900;
+    font-size: 16px;
+    letter-spacing: 0.8px;
+    margin-top: 4px;
+    margin-bottom: 85px;
+    text-transform: uppercase;
+}
+
+.select-type-heading {
+    font-size: 20px;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.25;
+    margin-bottom: 18px;
+    color: #111;
+}
+
+.slot-type-btn {
+    width: 90%;
+    padding: 11px 10px;
+    margin-bottom: 12px;
+    background: #c7c7c7;
+    border: 2px solid #999;
+    color: #111;
+    font-weight: 900;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.12s;
+}
+.slot-type-btn:hover {
+    background: #76d63e;
+    border-color: #111;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 0 #111;
+}
+.slot-type-btn.ai-btn:hover {
+    background: #4fc3f7;
+}
+
+/* Active State inside Slot Card */
+.slot-active-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.clear-slot-btn {
+    width: 100%;
+    padding: 8px;
+    background: #d7a1a1;
+    border: 2px solid #b57c7c;
+    color: #3e1b1b;
+    font-weight: 900;
+    font-size: 13px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: 0.12s;
+}
+.clear-slot-btn:hover {
+    background: #ef5350;
+    border-color: #111;
+    color: #fff;
+}
+
+.tank-customizer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.tank-preview-box {
+    width: 115px;
+    height: 125px;
+    background: #f0f2f5;
+    border: 3px solid #222;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.tank-preview-canvas {
+    width: 100px;
+    height: 100px;
+}
+
+.customizer-btns {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cust-btn {
+    width: 100%;
+    padding: 7px 6px;
+    background: #c7c7c7;
+    border: 2px solid #888;
+    color: #222;
+    font-weight: 900;
+    font-size: 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+.cust-btn:hover {
+    background: #e0e0e0;
+    border-color: #111;
+}
+
+.slot-badges-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 6px 0;
+    border-top: 2px dashed #ddd;
+    border-bottom: 2px dashed #ddd;
+}
+
+.color-diamond {
+    width: 28px;
+    height: 28px;
+    transform: rotate(45deg);
+    border: 3px solid #111;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.4);
+}
+
+.control-badge {
+    font-size: 11px;
+    font-weight: 800;
+    background: #26292e;
+    color: #fff;
+    padding: 5px 8px;
+    border-radius: 4px;
+    border: 2px solid #111;
+    text-align: center;
+    line-height: 1.25;
+}
+
+.slot-name-group {
+    margin-top: 6px;
+}
+.slot-name-label {
+    font-size: 14px;
+    font-weight: 900;
+    color: #111;
+    display: block;
+    margin-bottom: 3px;
+}
+.slot-name-input {
+    width: 100%;
+    padding: 7px 10px;
+    background: #b3dbff;
+    border: 2px solid #111;
+    font-size: 15px;
+    font-weight: 800;
+    color: #111;
+    outline: none;
+    user-select: text;
+    -webkit-user-select: text;
+}
+.slot-name-input:focus {
+    background: #d9eeff;
+}
+
+/* BOTTOM BAR (RESET / START!) */
+.setup-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.footer-btn {
+    min-width: 260px;
+    padding: 12px 32px;
+    font-size: 28px;
+    font-weight: 900;
+    color: #fff;
+    border: 4px solid #111;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transform: skewX(-6deg);
+    box-shadow: 6px 6px 0 #111;
+    text-shadow: 2px 2px 0 #111;
+    transition: transform 0.1s, filter 0.1s;
+}
+.footer-btn span {
+    display: inline-block;
+    transform: skewX(6deg);
+}
+.footer-btn:hover {
+    filter: brightness(1.1);
+    transform: skewX(-6deg) translateY(-2px);
+}
+.footer-btn:active {
+    transform: skewX(-6deg) translateY(2px);
+    box-shadow: 3px 3px 0 #111;
+}
+
+.btn-back {
+    background: #8c1d19;
+}
+.btn-start {
+    background: #68d331;
+    min-width: 320px;
+}
+.btn-start:disabled {
+    background: #555;
+    color: #999;
+    cursor: not-allowed;
+    filter: none;
+}
+
+#setup-warning {
+    color: #ffeb3b;
+    font-weight: 800;
+    font-size: 14px;
+    text-shadow: 1px 1px 0 #000;
+}
+
+/* --- GAME ARENA SCREEN --- */
+#game-screen {
+    background: #e6e8ec;
+    position: relative;
+    justify-content: space-between;
+}
+
+#game-top-bar {
+    width: 100%;
+    height: 46px;
+    background: #202327;
+    border-bottom: 3px solid #111;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px 0 210px; /* leave room for top-left lobby */
+    z-index: 20;
+}
+
+#round-status-text {
+    font-size: 16px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 0.6px;
+}
+
+.top-bar-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.hud-btn {
+    background: #373c44;
+    color: #fff;
+    border: 2px solid #111;
+    border-radius: 5px;
+    padding: 5px 12px;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+}
+.hud-btn:hover {
+    background: #4e5561;
+}
+.hud-btn.danger:hover {
+    background: #c62828;
+}
+
+#arena-wrapper {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    background: #d7dadf;
+}
+
+#game-canvas {
+    background: #eceef2;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    border: 4px solid #222;
+}
+
+/* 4-PLAYER SCOREBOARD AT BOTTOM (Classic AZ / Tank Trouble vibe) */
+#scoreboard {
+    width: 100%;
+    height: 82px;
+    background: #202327;
+    border-top: 4px solid #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    padding: 0 20px;
+    z-index: 20;
+}
+
+.score-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #2b3036;
+    border: 3px solid #111;
+    border-radius: 8px;
+    padding: 6px 18px;
+    min-width: 195px;
+    box-shadow: 3px 3px 0 #111;
+    transition: transform 0.2s, opacity 0.2s;
+}
+.score-card.dead {
+    opacity: 0.45;
+    filter: grayscale(0.6);
+}
+.score-card.winner-pulse {
+    transform: scale(1.08);
+    border-color: #76d63e;
+}
+
+.score-tank-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    border: 2px solid #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 16px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.score-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.score-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+}
+
+.score-sub {
+    font-size: 11px;
+    color: #9aa0a6;
+    font-weight: 700;
+}
+
+.score-points {
+    font-size: 30px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 2px 2px 0 #111;
+}
+
+/* ROUND BANNER & MATCH VICTORY MODAL */
+#round-banner {
+    position: absolute;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(17, 19, 23, 0.9);
+    border: 3px solid #111;
+    box-shadow: 4px 4px 0 #111;
+    padding: 10px 26px;
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff;
+    pointer-events: none;
+    display: none;
+    z-index: 40;
+}
+
+#victory-modal {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+#victory-modal.show {
+    display: flex;
+}
+
+.victory-box {
+    background: #2b3036;
+    border: 4px solid #111;
+    box-shadow: 10px 10px 0 #111;
+    padding: 28px 40px;
+    text-align: center;
+    max-width: 460px;
+}
+
+.victory-title {
+    font-size: 34px;
+    font-weight: 900;
+    margin: 0 0 10px 0;
+    color: #76d63e;
+    text-shadow: 2px 2px 0 #111;
+}
+
+.victory-sub {
+    font-size: 18px;
+    color: #ddd;
+    margin-bottom: 24px;
+    font-weight: 700;
+}
+
+.victory-actions {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+}
