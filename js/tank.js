@@ -227,8 +227,8 @@ export class Tank {
 
         this.alive = true;
         this.maxBullets = 5;
-        this.fireCooldown = 0;
-        this.shootLatch = false;
+        this.fireCooldown = 0.35; // Prevent instant accidental shot on round spawn
+        this.shootLatch = true;   // Require a fresh button press after spawning
         this.recoil = 0;
         this.treadTimer = 0;
 

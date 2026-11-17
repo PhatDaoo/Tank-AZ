@@ -231,10 +231,18 @@ export class Maze {
             else break;
         }
 
-        return chosen.map((cell) => ({
-            ...this.cellCenter(cell.col, cell.row),
-            angle: Math.floor(Math.random() * 4) * (Math.PI / 2)
-        }));
+        return chosen.map((cell) => {
+            const openNeighbors = this.getAccessibleNeighbors(cell.col, cell.row);
+            let spawnAngle = Math.floor(Math.random() * 4) * (Math.PI / 2);
+            if (openNeighbors.length > 0) {
+                const chosenNeighbor = openNeighbors[Math.floor(Math.random() * openNeighbors.length)];
+                spawnAngle = Math.atan2(chosenNeighbor.row - cell.row, chosenNeighbor.col - cell.col);
+            }
+            return {
+                ...this.cellCenter(cell.col, cell.row),
+                angle: spawnAngle
+            };
+        });
     }
 
     draw(ctx) {

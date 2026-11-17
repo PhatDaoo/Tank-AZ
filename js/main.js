@@ -316,6 +316,9 @@ function startNewRound() {
     const activeSlots = slots.filter((s) => s.type !== 'empty');
     const dims = getMazeDimensions(mazeSizeMode, activeSlots.length);
 
+    inputManager.resetRoundInputs();
+    hostNet.broadcast({ type: 'roundReset' });
+
     maze = new Maze(dims.cols, dims.rows, canvas.width, canvas.height);
     const spawns = maze.pickSpawnCells(activeSlots.length);
 

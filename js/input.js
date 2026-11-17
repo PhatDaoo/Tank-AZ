@@ -111,6 +111,20 @@ class InputManager {
         ps.vecY = 0;
     }
 
+    resetRoundInputs() {
+        for (let i = 1; i <= 4; i++) {
+            const preset = KEYBOARD_PRESETS[i];
+            if (preset && preset.shoot) {
+                for (const code of preset.shoot) {
+                    this.pressedCodes.delete(code);
+                }
+            }
+            if (this.phoneState[i]) {
+                this.phoneState[i].shoot = false;
+            }
+        }
+    }
+
     getTankInput(slot) {
         const preset = KEYBOARD_PRESETS[slot];
         const ps = this.phoneState[slot];
