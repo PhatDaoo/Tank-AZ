@@ -1,59 +1,11 @@
-Conversation Log
-dự án đã hoàn thành khá tốt rồi, hãy đưa cho tôi bản tổng kết về game này (sử dụng ngôn ngữ, UI, logic, công nghệ gì)
-
-Dưới đây là bản tổng kết toàn bộ dự án AZ Tank 4P trong a:\Tank AZ, phân theo ngôn ngữ, công nghệ, giao diện (UI) và logic cốt lõi:
-
-1. Ngôn ngữ & Công nghệ sử dụng
-Ngôn ngữ:
-HTML5 & CSS3: Dựng giao diện Host (index.html, css/style.css) và tay cầm điện thoại (controller.html).
-JavaScript (ES Modules thuần — type="module"): Chia module rõ ràng trong thư mục js/, không cần bundler (Webpack/Vite) hay framework ngoài, chạy tĩnh trực tiếp trên GitHub Pages.
-Đồ họa & Âm thanh:
-HTML5 Canvas 2D: Vẽ mê cung, xe tăng, đạn, tia laser, vết bánh xích và hiệu ứng hạt nổ.
-Web Audio API (js/sound.js): Tổng hợp âm thanh hoàn toàn bằng code (tiếng bắn pháo, đạn bật tường, nhặt hòm, bắn Laser, đặt mìn, nổ xe, nhạc thắng hiệp), không phụ thuộc file .mp3/.wav.
-Multiplayer & Mobile:
-PeerJS (peerjs@1.5.1): Kết nối WebRTC P2P DataChannel trực tiếp giữa màn hình PC (Host) và tối đa 4 điện thoại (Controller).
-QRCode.js (qrcodejs@1.0.0): Sinh mã QR động chứa URL ?host=<peerId> để điện thoại quét và vào thẳng phòng.
-Web APIs trên di động: Screen Wake Lock API (giữ sáng màn hình), Vibration API (phản hồi rung khi bắn / nhặt vũ khí / nổ xe), localStorage & sessionStorage (lưu layout tay cầm & tự nối lại slot khi F5).
-Local Dev Server: dev-server.js + start-local.bat dùng module http có sẵn của Node.js, không cần npm install.
-2. Giao diện (UI / UX)
-Màn hình Player Setup 4 ô (index.html, css/style.css, js/main.js):
-Lấy cảm hứng từ Gun Mayhem: 4 thẻ Player cho phép chọn HUMAN PLAYER, AI PLAYER, hoặc CLEAR SLOT.
-Tùy biến trực quan với Canvas preview: đổi Màu xe (8 màu), Kiểu tháp pháo (HAT) (Classic, Star, Stripe, Crown, Visor), Kiểu nòng (GUN) (Normal, Heavy, Muzzle), độ khó Bot (EASY / NORMAL / HARD) và đặt tên.
-Tùy chọn Điểm thắng (5 / 10 / 15 / Endless) và Kích thước Map (Small / Medium / Large).
-Floating QR Lobby (#lobby): Hộp nổi ở góc trên trái hiển thị trạng thái kết nối của 4 slot, mã QR và link mở tab controller test nhanh; tự động thu gọn khi vào trận (START!).
-Màn hình Đấu (#game-screen):
-Thanh HUD trên cùng (hiển thị Round, nút đổi Map R, bật/tắt âm thanh, quay lại Setup ESC).
-Bảng điểm 4 người ở cạnh dưới hiển thị màu xe, phương thức điều khiển (Phone / Keyboard / AI), vũ khí đặc biệt đang giữ và số điểm.
-Modal tổng kết chiến thắng khi đạt đủ điểm mục tiêu (Play Again / Player Setup).
-Phone Console (controller.html):
-Màn hình chọn slot P1–P4 đồng bộ tên & màu theo thời gian thực từ Host.
-Tay cầm chuyên cho xe tăng: Joystick ảo bên trái + nút FIRE lớn (tự đổi màu/nhãn theo vũ khí đang cầm) + nút REV (lùi) bên phải.
-Hỗ trợ 2 chế độ lái: DIRECT (kéo joystick hướng nào xe quay & chạy hướng đó) và CLASSIC (tiến/lùi + xoay trái/phải).
-Chế độ Layout Edit Mode: kéo thả vị trí cụm nút, chỉnh kích thước (0.6x – 2.2x) và lưu vào localStorage.
-3. Kiến trúc Logic Game
-Module	Vai trò chính
-js/maze.js	Sinh mê cung bằng Recursive Backtracker + mở ~18% tường nội bộ tạo đường vòng cho 4 xe; gộp các đoạn tường thẳng hàng để tránh kẹt góc; chọn 4 điểm spawn xa nhau nhất hướng nòng ra hành lang mở; cung cấp BFS getNextStepTowards() tìm đường ngắn nhất.
-js/physics.js	Va chạm tròn–đoạn thẳng mượt cho xe tăng (resolveCircleMazeCollision), va chạm giữa các xe (resolveTankVsTankCollisions), và Ricochet sub-stepping (stepBulletWithRicochet) giúp đạn bật tường chính xác, không xuyên tường mỏng.
-js/tank.js	Điều khiển xe tăng (cả 2 chế độ classic & direct), giới hạn 5 viên đạn thường/xe, cơ chế shootLatch chống tự bắn đầu hiệp, và logic bắn của 6 vũ khí đặc biệt.
-js/powerups.js	Hòm tiếp tế PowerUpCrate và 6 vũ khí đặc biệt: Laser (kèm tia ngắm phản xạ), Gatling (liên thanh 18 viên), Homing Missile (tên lửa tầm nhiệt tìm đường BFS), Frag Bomb (nổ tung 14 mảnh), Shotgun (7 viên tỏa nón), Proximity Mine (mìn tàng hình kích nổ theo vùng).
-js/ai.js	Bot AI biết tìm đường qua mê cung bằng BFS, né đạn đang lao tới, rẽ đi nhặt hòm vũ khí, kiểm tra an toàn trước nòng (kể cả đường phản xạ Laser để không tự sát) và hỗ trợ 3 cấp độ khó.
-js/input.js	Hợp nhất input từ 4 cụm phím PC (Arrows+M, WASD+Q/Space, IJKL+P/U, Numpad 8546+0) và Phone Console WebRTC, kèm resetRoundInputs() chống kẹt phím khi qua hiệp.
-js/network.js	Quản lý PeerJS Host, phân bổ/thu hồi slot P1–P4, tự giải phóng input khi điện thoại rớt mạng, gửi phản hồi rung (haptic), cập nhật vũ khí (weaponUpdate) và reset tay cầm đầu hiệp (roundReset).
-js/particles.js	Vẽ vết bánh xích, vết cháy nổ trên sàn, khói đầu nòng, tia lửa đập tường, sóng xung kích và chữ nổi thông báo nhặt vũ khí.
-js/main.js	Vòng lặp fixed timestep 60fps (FIXED_DT = 1/60) bọc try/catch chống treo, điều phối vòng đấu với Grace Period 2.2s (chờ đạn lạc settle trước khi chốt điểm/hòa) và đồng bộ HUD.
-tạo file doc cho toàn bộ phân tích này 
-
-Mình đã tạo xong file tài liệu tổng kết đầy đủ tại README.md trong thư mục dự án, bao gồm:
-
-Công nghệ & ngôn ngữ sử dụng
-Cấu trúc thư mục và vai trò từng module
-Thiết kế giao diện Host (4-slot Player Setup, QR Lobby, Arena HUD) & Phone Console (controller.html)
-Chi tiết logic mê cung, vật lý đạn nảy, 6 vũ khí đặc biệt, Bot AI và giao thức WebRTC PeerJS
-Bảng phím điều khiển, cách chạy local và deploy lên GitHub Pages.
 # AZ Tank 4P — Multiplayer Maze Tank Arena (Web & Phone Console)
+
 **AZ Tank 4P** là phiên bản web clone của tựa game bắn xe tăng mê cung kinh điển **AZ (Tank Trouble)**, mở rộng lên **tối đa 4 người chơi (4-Player)** với màn hình chọn nhân vật 4 ô lấy cảm hứng từ **Gun Mayhem**, kết hợp hệ thống **Phone Console (biến điện thoại thành tay cầm qua mã QR + WebRTC PeerJS)** chạy hoàn toàn tĩnh trên **GitHub Pages**.
+
 ---
+
 ## 1. Công nghệ & Ngôn ngữ sử dụng
+
 | Thành phần | Công nghệ / Ngôn ngữ | Vai trò |
 | :--- | :--- | :--- |
 | **Giao diện** | HTML5, CSS3 | Màn hình Host (`index.html`), tay cầm di động (`controller.html`) và style (`css/style.css`). |
@@ -64,8 +16,11 @@ Bảng phím điều khiển, cách chạy local và deploy lên GitHub Pages.
 | **QR Pairing** | QRCode.js `1.0.0` | Tạo mã QR động chứa link `?host=<peerId>` để điện thoại quét và vào phòng ngay lập tức. |
 | **Mobile Web APIs** | Wake Lock, Vibration, Storage API | Giữ sáng màn hình điện thoại, phản hồi rung (`haptic`), lưu bố cục tay cầm (`localStorage`) và giữ slot khi tải lại (`sessionStorage`). |
 | **Local Test Server** | Node.js `http` (`dev-server.js`) | Serve file tĩnh tại `http://localhost:3000` không cần `npm install`. |
+
 ---
+
 ## 2. Cấu trúc thư mục dự án
+
 ```text
 a:\Tank AZ\
 ├── index.html          # Màn hình chính Host (Floating QR Lobby, Player Setup, Arena, Scoreboard)
@@ -87,8 +42,11 @@ a:\Tank AZ\
 ├── start-local.bat     # Script khởi động nhanh server trên Windows
 └── README.md           # Tài liệu tổng quan kiến trúc & hướng dẫn sử dụng
 ```
+
 ---
+
 ## 3. Thiết kế Giao diện (UI / UX)
+
 ### 3.1. Màn hình Host (`index.html`)
 - **Floating QR Lobby (`#lobby`)**: Nằm ở góc trên bên trái, hiển thị trạng thái kết nối của 4 slot, mã QR để quét và đường dẫn `open controller tab` để test nhanh trên trình duyệt. Khi bấm `START!`, hộp lobby tự thu gọn để không che khuất mê cung.
 - **Player Setup 4 ô (`#setup-screen`)**:
@@ -99,3 +57,76 @@ a:\Tank AZ\
 - **Màn hình Đấu (`#game-screen`)**:
   - Thanh HUD trên cùng: Hiển thị số hiệp, nút đổi map nhanh (`R`), tắt/bật âm thanh và nút quay về Setup (`ESC`).
   - Bảng điểm 4 người phía dưới (`#scoreboard`): Hiển thị màu xe, tên, phương thức điều khiển, vũ khí đặc biệt đang giữ và điểm số; làm mờ các xe đã bị hạ trong hiệp.
+
+### 3.2. Giao diện Tay cầm Điện thoại (`controller.html`)
+- **Màn hình chọn Slot**: Hiển thị 4 nút `Player 1–4` đồng bộ tên và màu sắc theo thời gian thực từ Host; khóa các slot đã có người khác chọn.
+- **Màn hình Tay cầm**:
+  - **Joystick ảo bên trái**: Hỗ trợ 2 chế độ chuyển đổi nhanh bằng nút `Mode`:
+    - `DIRECT` (Mặc định): Kéo joystick theo hướng 360° bất kỳ, xe tăng tự xoay mặt và chạy về hướng đó.
+    - `CLASSIC`: Lên/Xuống = Tiến/Lùi, Trái/Phải = Xoay thân xe.
+  - **Cụm nút bên phải**: Nút `FIRE` cỡ lớn (tự đổi màu, hiển thị tên viết tắt & số đạn của vũ khí đặc biệt đang cầm) và nút `REV` (lùi nhanh). Hỗ trợ đa điểm chạm (`touch.identifier`) và bắt `touchcancel` / `window.touchend` để không bị kẹt nút.
+  - **Edit Mode (`⚙️ Layout`)**: Cho phép kéo thả vị trí từng cụm nút theo `%` màn hình, chỉnh kích thước bằng thanh trượt (`0.6x – 2.2x`) và lưu vào `localStorage` (`azTankLayout`).
+
+---
+
+## 4. Logic Gameplay, Vật lý & AI
+
+### 4.1. Sinh mê cung & Điểm xuất phát (`js/maze.js`)
+- Sinh mê cung bằng thuật toán **Recursive Backtracker**, sau đó mở thêm ~18% tường nội bộ (braid maze) để tạo các vòng lặp chiến thuật, giúp 4 xe tăng dễ luồn lách và tránh kẹt ngõ cụt.
+- Các đoạn tường thẳng hàng được gộp thành đoạn thẳng liên tục (`buildSegments()`) để xe tăng trượt mượt và đạn không bị vấp mép ô lưới.
+- `pickSpawnCells()` chọn các vị trí xuất phát cách xa nhau nhất và xoay nòng súng hướng về **hành lang mở** (`getAccessibleNeighbors`), tránh tình trạng vừa vào hiệp đã quay mặt sát tường.
+
+### 4.2. Vật lý Xe tăng & Đạn nảy (`js/physics.js`, `js/tank.js`)
+- **Va chạm Xe tăng**: Dùng `resolveCircleMazeCollision()` với 2 vòng lặp thư giãn giúp xe trượt mượt dọc theo tường và góc tường.
+- **Đạn nảy tường (Ricochet)**: `stepBulletWithRicochet()` chia nhỏ bước di chuyển theo từng sub-step (`~2.5px/step`) để chống xuyên tường mỏng và tính vector phản xạ chính xác theo pháp tuyến mặt tường hoặc góc tường.
+- **Luật AZ chuẩn**: Mỗi xe bắn tối đa 5 viên đạn thường cùng lúc (tồn tại 9 giây); đạn nảy tường có thể tiêu diệt chính người bắn (`leftShooter`).
+- **Chống tự bắn đầu hiệp**: Mỗi xe khởi tạo với `shootLatch = true` và `fireCooldown = 0.35s`, kết hợp `resetRoundInputs()` xóa sạch trạng thái phím/nút bắn khi chuyển hiệp mới.
+- **Grace Period**: Khi còn `<= 1` xe sống sót, trận đấu chờ thêm **2.2 giây** để xử lý các viên đạn nảy cuối cùng (có thể xảy ra tình huống cùng chết dẫn đến **DRAW**).
+
+### 4.3. Kho vũ khí đặc biệt (`js/powerups.js`)
+Hòm tiếp tế (`PowerUpCrate`) xuất hiện định kỳ trên bản đồ (tối đa 3 hòm cùng lúc), cấp ngẫu nhiên 1 trong 6 vũ khí:
+1. **`LASER` (1 viên)**: Hiện tia ngắm chấm đỏ phản xạ qua 2 tường; khi bắn tạo tia laser nảy 3 lần tiêu diệt tức thì mọi xe trên đường tia.
+2. **`GATLING` (18 viên)**: Nhấn giữ nút bắn để xả liên thanh chùm đạn tốc độ cao.
+3. **`HOMING` (1 quả)**: Tên lửa tầm nhiệt kích hoạt sau `0.42s`, tự tìm đường qua mê cung bằng BFS để đuổi theo xe gần nhất.
+4. **`FRAG BOMB` (1 quả)**: Bom nảy tường phát nổ sau `1.75s` (hoặc khi va chạm), tách thành 14 mảnh đạn văng 360°.
+5. **`SHOTGUN` (2 phát)**: Bắn chùm 7 viên đạn tỏa hình nón.
+6. **`MINE` (3 quả)**: Đặt mìn tàng hình phía sau đuôi xe, kích nổ khi có xe đi vào vùng cảm ứng hoặc bị đạn bắn trúng.
+
+### 4.4. Bot AI (`js/ai.js`)
+- Dùng BFS trên lưới mê cung để dẫn đường tiếp cận đối thủ gần nhất, hoặc rẽ đường nhặt hòm vũ khí khi đang dùng đạn thường.
+- Phát hiện đạn đang bay tới và đánh lái vuông góc để né đạn.
+- Kiểm tra tầm nhìn (`hasLineOfSight`) trước khi bắn và tính trước đường phản xạ của tia `LASER` (`computeBouncingLaserPath`) để không tự sát.
+
+---
+
+## 5. Giao thức WebRTC (PeerJS) giữa Host & Controller
+
+| Hướng | Event `type` | Mô tả |
+| :--- | :--- | :--- |
+| Host → Phone | `playersUpdate` | Danh sách slot đã có người chọn (`taken`) cùng tên và màu hiện tại của 4 slot. |
+| Phone → Host | `requestPlayer` | Yêu cầu chiếm slot `1..4`. |
+| Host → Phone | `requestPlayerResponse` | Xác nhận cấp slot kèm tên, màu xe hoặc báo lỗi nếu slot đã bị chiếm. |
+| Phone → Host | `action` | Gửi trạng thái nút (`up`, `down`, `left`, `right`, `shoot`) dạng `pressed` / `released`. |
+| Phone → Host | `joystickVector` | Gửi vector góc lái `(vx, vy)` trong chế độ `DIRECT`. |
+| Phone → Host | `leaveSlot` | Giải phóng slot chủ động khi bấm `Leave`. |
+| Host → Phone | `weaponUpdate` | Đồng bộ vũ khí đang cầm và số đạn còn lại lên nút `FIRE` của tay cầm. |
+| Host → Phone | `haptic` | Kích hoạt rung điện thoại khi xe tăng bị bắn nổ. |
+| Host → Phone | `roundReset` | Yêu cầu tay cầm nhả toàn bộ nút đang giữ khi bắt đầu hiệp mới. |
+
+---
+
+## 6. Điều khiển & Cách chạy
+
+### Phím mặc định trên PC
+- **Player 1**: `Arrow Keys` + `M` (hoặc `/`)
+- **Player 2**: `W A S D` + `Q` (hoặc `Space`)
+- **Player 3**: `I J K L` + `P` (hoặc `U`)
+- **Player 4**: `Numpad 8 5 4 6` + `Numpad 0` (hoặc `1` / `Enter`)
+- **Phím tắt trận đấu**: `R` (Đổi map mới), `ESC` (Quay về Player Setup)
+
+### Chạy trên máy cá nhân (Local)
+1. Chạy `node dev-server.js` (hoặc mở `start-local.bat`).
+2. Truy cập `http://localhost:3000`.
+
+### Deploy lên GitHub Pages
+- Toàn bộ mã nguồn là HTML/CSS/JS tĩnh, chỉ cần push thư mục dự án lên nhánh `main` (hoặc `gh-pages`) và bật **GitHub Pages** trong phần Settings của repository.
