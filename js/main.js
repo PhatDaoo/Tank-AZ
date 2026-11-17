@@ -537,12 +537,12 @@ function updatePhysicsStep(dt) {
 
         b.age += dt;
         if (b.age >= b.maxAge) {
+            bullets.splice(i, 1);
             if (b.isSpecial === 'FRAG') {
                 detonateFragBurst(b.ownerSlot, b.x, b.y, 14);
             } else {
                 particles.spawnBulletPop(b.x, b.y);
             }
-            bullets.splice(i, 1);
             continue;
         }
 
@@ -562,6 +562,7 @@ function updatePhysicsStep(dt) {
                 b.alive = false;
                 m.alive = false;
                 mines.splice(mIdx, 1);
+                bullets.splice(i, 1);
                 for (const t of tanks) {
                     if (t.alive && Math.hypot(t.x - m.x, t.y - m.y) < 54) {
                         destroyTank(t);
@@ -572,7 +573,6 @@ function updatePhysicsStep(dt) {
             }
         }
         if (!b.alive) {
-            bullets.splice(i, 1);
             continue;
         }
 
@@ -597,16 +597,13 @@ function updatePhysicsStep(dt) {
             const dist = Math.hypot(b.x - tank.x, b.y - tank.y);
             if (dist < tank.radius + b.radius) {
                 b.alive = false;
+                bullets.splice(i, 1);
                 if (b.isSpecial === 'FRAG') {
                     detonateFragBurst(b.ownerSlot, b.x, b.y, 12);
                 }
                 destroyTank(tank);
                 break;
             }
-        }
-
-        if (!b.alive) {
-            bullets.splice(i, 1);
         }
     }
 
@@ -741,19 +738,24 @@ let accumulator = 0;
 const FIXED_DT = 1 / 60;
 
 function mainLoop(now) {
+    requestAnimationFrame(mainLoop);
+
     const frameTime = Math.min(0.1, (now - lastTime) / 1000);
     lastTime = now;
 
     if (gameRunning) {
-        accumulator += frameTime;
-        while (accumulator >= FIXED_DT) {
-            updatePhysicsStep(FIXED_DT);
-            accumulator -= FIXED_DT;
+        try {
+            accumulator += frameTime;
+            while (accumulator >= FIXED_DT) {
+                updatePhysicsStep(FIXED_DT);
+                accumulator -= FIXED_DT;
+            }
+            drawArena();
+        } catch (err) {
+            console.error('AZ Tank loop error recovered:', err);
+            accumulator = 0;
         }
-        drawArena();
     }
-
-    requestAnimationFrame(mainLoop);
 }
 
 // --- TOP BAR & VICTORY BUTTONS ---

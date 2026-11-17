@@ -337,10 +337,19 @@ export class Tank {
         }
 
         const wId = this.weapon.id;
+        const wColor = this.weapon.color;
+
+        // Consume special weapon ammo BEFORE firing callbacks (in case a bouncing laser self-kills the shooter and clears this.weapon!)
+        if (this.weapon) {
+            this.weapon.ammo--;
+            if (this.weapon.ammo <= 0) {
+                this.weapon = null;
+            }
+        }
 
         if (wId === 'LASER') {
             const points = computeBouncingLaserPath(bx, by, this.angle, maze, 3, 950);
-            laserBeams.push(new LaserBeamEffect(points, this.weapon.color));
+            laserBeams.push(new LaserBeamEffect(points, wColor));
             this.recoil = 1.2;
             this.fireCooldown = 0.35;
             particles.spawnMuzzlePuff(bx, by, this.angle);
@@ -403,11 +412,6 @@ export class Tank {
             if (callbacks.onShoot) callbacks.onShoot(this, 'MINE');
         }
 
-        // Consume special weapon ammo
-        this.weapon.ammo--;
-        if (this.weapon.ammo <= 0) {
-            this.weapon = null;
-        }
         if (callbacks.onWeaponChanged) {
             callbacks.onWeaponChanged(this);
         }

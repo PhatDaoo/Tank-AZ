@@ -1,6 +1,7 @@
 // Smart Bot AI Controller for AZ Tank (Supports Easy / Normal / Hard)
 
 import { hasLineOfSight } from './physics.js';
+import { computeBouncingLaserPath, checkLaserHitsTank } from './powerups.js';
 
 function normalizeAngle(a) {
     while (a > Math.PI) a -= Math.PI * 2;
@@ -212,9 +213,37 @@ export class AIController {
             if (tank.weapon && tank.weapon.id === 'HOMING' && frontClear && bestDist < maze.cellSize * 3.5 && st.shootTimer <= 0) {
                 input.shoot = true;
                 st.shootTimer = 0.7;
-            } else if (tank.aiLevel !== 'easy' && bestDist < maze.cellSize * 1.9 && st.shootTimer <= 0 && frontClear && Math.random() < 0.025) {
+            } else if (
+                (!tank.weapon || tank.weapon.id !== 'LASER') &&
+                tank.aiLevel !== 'easy' &&
+                bestDist < maze.cellSize * 1.9 &&
+                st.shootTimer <= 0 &&
+                frontClear &&
+                Math.random() < 0.025
+            ) {
                 input.shoot = true;
                 st.shootTimer = 0.85;
+            }
+        }
+
+        // Special safety & bank-shot check when holding LASER:
+        // Never fire if the reflected beam hits the AI itself; fire immediately if a bounce hits an enemy!
+        if (tank.weapon && tank.weapon.id === 'LASER') {
+            const muzzleDist = tank.radius + 6;
+            const bx = tank.x + Math.cos(tank.angle) * muzzleDist;
+            const by = tank.y + Math.sin(tank.angle) * muzzleDist;
+            const laserPts = computeBouncingLaserPath(bx, by, tank.angle, maze, 3, 950);
+            const hitsSelf = checkLaserHitsTank(laserPts, tank, true).hit;
+            if (hitsSelf) {
+                input.shoot = false;
+            } else if (st.shootTimer <= 0) {
+                const hitsEnemy = allTanks.some(
+                    (o) => o.alive && o.slot !== tank.slot && checkLaserHitsTank(laserPts, o, false).hit
+                );
+                if (hitsEnemy) {
+                    input.shoot = true;
+                    st.shootTimer = 0.45;
+                }
             }
         }
 
